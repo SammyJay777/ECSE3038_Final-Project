@@ -6,7 +6,7 @@ In this project, you'll be working to build a prototype for a low cost patient m
 
 Patients using this system should be outfitted with a module that should be designed to monitor and report on at least two parameters of the patient. Those two parameters are body temperature and positional orientation.
 
-###Embedded
+## Embedded
 
 Students should employ the use of a Gyroscope/Accelerometer sensor like the MPU-6050 and a temperature sensor like the TMP36, the DHT11 or the LM35.
 
