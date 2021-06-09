@@ -1,8 +1,8 @@
-###Overview
+## Overview
 
 In this project, you'll be working to build a prototype for a low cost patient monitoring system. This project is made up of a software and a hardware component.
 
-###Hardware
+## Hardware
 
 Patients using this system should be outfitted with a module that should be designed to monitor and report on at least two parameters of the patient. Those two parameters are body temperature and positional orientation.
 
