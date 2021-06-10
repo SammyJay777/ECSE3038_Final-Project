@@ -1,9 +1,5 @@
 # Aim
 
-> The Riddler: If you *AIM* to give us a *SHOT*, we'll riddle you. What are we?
-
-> Batman: Is it... helicopter?
-
 The aim of this project is to have students understand the procedures and technologies that go into developing a full stack web application. Students should use knowledge gained from the past lectures and tutorials as well as researched information to develop a web app as defined in this document.
 
 # Overview
