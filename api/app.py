@@ -11,8 +11,7 @@ from datetime import datetime
 import time
 
 app = Flask(__name__)
-app.config["MONGO_URI"]=''
-# mongodb+srv://User620119624:Student_620119624@cluster-620119624.gb5bm.mongodb.net/Tank?retryWrites=true&w=majority
+app.config["MONGO_URI"]='mongodb+srv://User620119624:Student_620119624@cluster-620119624.gb5bm.mongodb.net/Tank?retryWrites=true&w=majority'
 CORS(app)
 mongo = PyMongo(app)
 
