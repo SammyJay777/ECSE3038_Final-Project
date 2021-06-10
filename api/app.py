@@ -1,137 +1,176 @@
-from flask import Flask, request, json, jsonify
+from flask import Flask, request, jsonify, Response, stream_with_context
 from flask_pymongo import PyMongo
+from gevent import monkey; monkey.patch_all()
+from gevent.pywsgi import WSGIServer
 from marshmallow import Schema, fields, ValidationError
 from bson.json_util import dumps
-from json import loads
-import datetime
-from flask_socketio import SocketIO
 from flask_cors import CORS
+from json import loads
+import json
+from datetime import datetime
+import time
 
 app = Flask(__name__)
-app.config["MONGO_URI"]=''
+app.config["MONGO_URI"]='mongodb+srv://User620119624:<password>@cluster-620119624.gb5bm.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 CORS(app)
 mongo = PyMongo(app)
-# socketConnect = False
-# socket stuff
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, cors_allowed_origins="*")
-# socketio = SocketIO(app, cors_allowed_origins="http://127.0.0.1:5501")
 
-class RecordValidation(Schema):
-    patient_id = fields.String(required = True)
-    position = fields.Integer(required = True, strict = True)
-    temperature = fields.Integer(required = True, strict = True)
+db_patients = mongo.db.patients
+db_records = mongo.db.records
 
-class PatientValidation(Schema):
-    fname = fields.String(required = True)
-    lname = fields.String(required = True)
-    age = fields.Integer(required = True, strict = True)
-    patient_id = fields.String(requred = True)
+class PatientData(Schema):
+    fname = fields.String(required=True)
+    lname = fields.String(required=True)
+    age = fields.Integer(required=True)
+    patient_id = fields.String(required=True)
 
-# "route" that gets the connection message
-@socketio.on('frontendconnect')
-def handle_my_custom_event(json):
-    print('notification: ' + str(json))
+class RecordData(Schema):
+    position = fields.String(required=True)
+    temperature = fields.Integer(required=True)
+    last_updated = fields.String(required=True)
+    patient_id = fields.String(required=True)
 
-@app.route("/api/record", methods = ["POST"])
-def new_record():
-    # received by the backend
-    x = datetime.datetime.now()
-    timeString = x.strftime("%m"+"/"+"%d"+"/"+"%Y"+"-"+"%H"+":"+"%M"+":"+"%S")
-    req = request.json 
-    # print(req)
-    # Just incase the request has additional unwanted records
-    database = {
-        "patient_id" : req["patient_id"],
-        "position" : req["position"],
-        "temperature":req["temperature"]
-    }
-    
-    try:
-        recordTemp = RecordValidation().load(database) # only fails when it gets bad data (violates schema)
-        recordTemp["last_updated"] = timeString
-        mongo.db.record.insert_one(recordTemp) # fails when db isn't connected
-        # saved in the database
-        # now pull record with the id that called this view function (use timestamp too)
-        mostrecentrecord = mongo.db.record.find_one({"last_updated":recordTemp["last_updated"]})
-        jsonobject = loads(dumps(mostrecentrecord))
-        socketio.emit('message', jsonobject)
-        return {"success":True, "msg":"Data saved in database successfully"}
-    except ValidationError as ve:
-        return ve.messages, 400 # Bad Request hence data was not saved to the database
-    except Exception as e:   
-        return {"msg" : "Can't insert_one to record collection"},500 # data was not saved to the database because of some internal server error
-# {"patient_id":id, "temperature": 40}
-@app.route("/api/record/<id>")
-def get_records(id):
-    x = datetime.datetime.now()
-    currentTimeString = x.strftime("%m"+"/"+"%d"+"/"+"%Y"+"-"+"%H"+":"+"%M"+":"+"%S")
-    y = x - datetime.timedelta(minutes=30)
-    pastTimeString = y.strftime("%m"+"/"+"%d"+"/"+"%Y"+"-"+"%H"+":"+"%M"+":"+"%S")
-    dbList = []
-    for document in mongo.db.record.find({"patient_id":id,"last_updated" : {"$gte" : pastTimeString , "$lte" : currentTimeString}}):
-        dbList.append(document)
-    print(dbList)
-    return jsonify(loads(dumps(dbList)))
+nextPosition = ""
+nextTemperature = ""
+nextID = ""
+nextTime = ""
 
-# Frontend requests 
-@app.route("/api/patient")
-def get_patients():
-    allobjects = mongo.db.patient.find()
-    jsonobject = jsonify(loads(dumps(allobjects))) # convert python list to json(Response instance in python) ("<class 'flask.wrappers.Response'>")
-    # print(type(jsonobject))
-    return jsonobject
+# ROUTE 1:
+@app.route("/api/patient", methods=["GET", "POST"])
+def home():
+    if request.method == "POST":
+        # /POST
+        try: 
+            fname = request.json["fname"]
+            lname = request.json["lname"]
+            age = request.json["age"]
+            patient_id = request.json["patient_id"]
 
-@app.route('/api/patient', methods = ['POST'])
-def add_patient():
-    req = request.json
-    # Just incase the request has additional unwanted records 
-    database = {
-        "fname" : req["fname"],
-        "lname" : req["lname"],
-        "age" : req["age"],
-        "patient_id":req["patient_id"]
-    }  
-    try:
-        patientTemp = PatientValidation().load(database) # only fails when it gets bad data (violates schema)
-        mongo.db.patient.insert_one(patientTemp) # fails when db isnt connected and such
-        return {"success":True, "msg":"Data saved in database successfully"}
-    except ValidationError as ve:
-        return ve.messages, 400 # Bad Request hence data was not saved to the database
-    except Exception as e:
-        return {"msg" : "Can't insert_one to patient collection"}, 500 # data was not saved to the database because of some internal server error
+            jsonBody = {
+                "fname": fname,
+                "lname": lname,
+                "age": age,
+                "patient_id": patient_id
+            }
+            
+            newPatient = PatientSchema().load(jsonBody)
+            db_patients.insert_one(newPatient)
 
-@app.route('/api/patient/<id>', methods = ["GET", "PATCH", "DELETE"])
-def get_a_patient(id):
-    anobject = mongo.db.patient.find_one({"patient_id":id})
-    jsonobject = loads(dumps(anobject))
-    if request.method == "GET":
-        return jsonobject
-    elif request.method == "PATCH":
-        req = request.json
-        if "fname" in req:
-            jsonobject["fname"] = req["fname"]
-            mongo.db.patient.update_one({"patient_id":id}, {"$set":{"fname":jsonobject["fname"]}})
-        if "lname" in req:
-            jsonobject["lname"] = req["lname"]
-            mongo.db.patient.update_one({"patient_id":id}, {"$set":{"lname": jsonobject["lname"]}})
-        if "age" in req:
-            jsonobject["age"] = req["age"]
-            mongo.db.patient.update_one({"patient_id":id}, {"$set":{"age": jsonobject["age"]}})
-        if "patient_id" in req:
-            jsonobject["patient_id"] = req["patient_id"]
-            mongo.db.patient.update_one({"patient_id":id}, {"$set":{"patient_id":jsonobject["patient_id"]}})
-        # at this point in the program, the id would have updated if an id update was sent
-        # so use the jsonobject["patient_id"] to search for the document
-        anobject = mongo.db.patient.find_one({"patient_id":jsonobject["patient_id"]})
-        jsonobject = loads(dumps(anobject))
-        return jsonobject
+            return {
+                "sucess": True,
+                "message": "Patient saved to database successfully!"
+            }, 200
+
+        except ValidationError as err1:
+            return {
+                "sucess": False,
+                "message": "An error occured while trying to post patient"
+            }, 400
+    else:
+        # /GET
+        patients = db_patients.find()
+
+        return  jsonify(loads(dumps(patients))), 200
+
+# ROUTE 2:
+@app.route("/api/patient/<path:id>", methods=["GET", "PATCH", "DELETE"])
+def Profileinfo(id):
+     
+    filt = {"patient_id" : id}
+
+    if request.method == "PATCH":
+        # /PATCH
+        updates = {"$set": request.json}
+        db_patients.update_one(filt, updates)      
+        updatedPatient = db_patients.find_one(filt)
+
+        return  jsonify(loads(dumps(updatedPatient)))
+
     elif request.method == "DELETE":
-        deleteinstance = mongo.db.patient.delete_one({"patient_id":id})
-        if deleteinstance.deleted_count == 1:
-            return {"success": True}
-        else:
-            return {"success": False}, 400
+        # /DELETE
+        tmp = db_patients.delete_one(filt)
+        result = {"sucess" : True} if tmp.deleted_count == 1 else {"sucess" : False}
+       
+        return result
 
-if __name__ == "__main__":
-    socketio.run(app,debug = True, host="0.0.0.0", port = 3000)
+    else:
+        # /GET
+        patient = db_patients.find_one(filt)
+
+        return  jsonify(loads(dumps(patient)))
+
+# ROUTE 3:
+@app.route("/api/record", methods=["GET", "POST"])
+def postPatientData():
+    if request.method == "POST":
+        # POST:
+        try:
+            position = request.json["position"]
+            temperature = request.json["temperature"]
+            last_updated = datetime.now().strftime("%c")
+            patient_id = request.json["patient_id"]
+
+            global nextPosition, nextID, nextTemperature, nextTime
+            nextPosition = position
+            nextID = patient_id
+            nextTemperature = temperature
+            nextTime = last_updated
+
+            jsonBody = {
+                "position": position,
+                "temperature": temperature,
+                "last_updated": last_updated,
+                "patient_id": patient_id
+            }
+
+            newRecord = RecordSchema().load(jsonBody)
+            db_records.insert_one(newRecord)
+
+            return{
+                "success": True,
+                "message": "Record saved to database successfully"
+            }, 200
+
+        except ValidationError as err2:
+            return{
+                "success": False,
+                "message": "An error occured while trying to post record"
+            }, 400
+
+    else:
+        # GET:
+        records = db_records.find()
+        return  jsonify(loads(dumps(records))), 200
+
+# ROUTE 4:
+@app.route("/api/record/<path:id>", methods=["GET"])
+def getPatientData(id):
+    filt = {"patient_id" : id}
+   
+    # /GET
+    record = db_records.find_one(filt)
+    return  jsonify(loads(dumps(record)))
+
+# ROUTE Listen:
+@app.route("/listen")
+def listen():
+    def respondToClient():
+        while True:
+            global nextPosition, nextTemperature, nextID, nextTime
+
+            jsonBody = {
+                "position": nextPosition,
+                "temperature": nextTemperature,
+                "patient_id": nextID,
+                "last_updated": nextTime
+            }
+
+            data = json.dumps(jsonBody)
+            yield f"id: 1\ndata: {data}\nevent: online\n\n"
+            time.sleep(0.5)
+        
+    return Response(respondToClient(), mimetype='text/event-stream')
+            
+if __name__ == '__main__':
+    http_server = WSGIServer(("10.22.5.86", 5000), app)
+    http_server.serve_forever()
