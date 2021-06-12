@@ -1,0 +1,213 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+.navbar {
+    display: flex;
+    position: relative;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    color: white;
+}
+
+.brand-title {
+    font-size: 1.5rem;
+    margin: .5rem;
+}
+
+.navbar-links {
+    height: 100%;
+}
+
+.navbar-links ul {
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-links li {
+    list-style: none;
+}
+
+.navbar-links li a {
+    display: block;
+    text-decoration: none;
+    color: white;
+    padding: 1rem;
+}
+
+.navbar-links li:hover {
+    background-color: #555;
+}
+
+.toggle-button {
+    position: absolute;
+    top: .75rem;
+    right: 1rem;
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 21px;
+}
+
+.toggle-button .bar {
+    height: 3px;
+    width: 100%;
+    background-color: rgb(160, 61, 36);
+    border-radius: 10px;
+}
+
+@media (max-width: 800px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .toggle-button {
+        display: flex;
+    }
+
+    .navbar-links {
+        display: none;
+        width: 100%;
+    }
+
+    .navbar-links ul {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .navbar-links ul li {
+        text-align: center;
+    }
+
+    .navbar-links ul li a {
+        padding: .5rem 1rem;
+    }
+
+    .navbar-links.active {
+        display: flex;
+    } 
+}
+
+.content{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.left_area h3{
+    color: #fff;
+    margin: 0;
+    text-transform: uppercase;
+    font-size: 22px;
+    font-weight: 900;
+    left: 50px;
+}
+.left_area span{
+    color: #1de738;
+}
+
+.patient_data{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    border: solid black 2px;
+    overflow: hidden;
+}
+.patient_img{
+    width: 200px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    /*border: solid  black 2px; */
+}
+.patient_img img{
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-top: 40px;
+    padding-bottom: 10px;
+    margin-top:-20px;
+    width: 150px;
+    height: 150px;
+}
+.patient_img img:hover{
+    cursor: pointer;
+}
+.buttons{
+    display: flex;
+}
+.edit{
+    width: 90px;
+    height:40px;
+    padding-left: 40px;
+    padding-top: 10px;
+    background: #ccc;
+    background: #ccc;
+    border: none;
+}
+.edit:hover{
+    cursor: pointer;
+    color: rgb(255, 0, 0);
+}
+.delete{
+    width: 110px;
+    height:40px;
+    padding-left: 30px;
+    padding-top: 10px;
+    background: black;
+    color: rgb(216, 216, 216);
+    border: none;
+}
+.delete:hover{
+    cursor: pointer;
+    color: rgb(255, 0, 0);
+}
+.display{
+    width: 400px;
+    height: 240px;
+    /*margin-top: 120px;*/
+    overflow: hidden;
+}
+.display .first_name{
+    height: 80px;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 25px;
+    font-weight: 700;
+}
+.display .last_name{
+    background: #ccc;
+    height: 80px;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 25px;
+    font-weight: 700;
+}
+.display .position{
+    height: 80px;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 25px;
+    font-weight: 700;
+}
+.display .patient_id{
+    height: 60px;
+    display: none;
+    justify-content: space-around;
+    align-items: center;
+    font-size: 25px;
+    font-weight: 700;
+}

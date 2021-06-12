@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <link rel="stylesheet" href="style_info.css">
+      <link rel="stylesheet" href="background_styles.css">
+      <script src="infoScript.js" defer></script>
+      <title>Responsive Navbar</title>
+    </head>
+    <body>
+      <nav class="navbar">
+        <header>
+          <div class="left_area">
+            <h3> Patient<span> DATABASE</span></h3>
+        </div>
+        </header>
+
+        <a href="#" class="toggle-button">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </a>
+        <div class="navbar-links">
+          <ul>
+            <li><a href="index.html">Patient Data </a></li>
+            <li><a href="information.html">Add New Patient </a></li>
+            <li><a href="graphPart.html">Graph</a></li>
+          </ul>
+        </div>
+      </nav>
+      <!-----Nav Bar ends----->
+  
+      <!-----page content begins----->
+      <div class="content">
+          <div class="container">
+              <div class="title">Enter Patient Data</div>
+              <div class="instructions">
+                  Enter the information on the patient below below, according to the parameters of the 
+                  assigned to each box.  
+              </div>
+              <form action="#">
+                  <div class="user_details">
+                      <div class="input_box">
+                          <span class="details">First Name</span>
+                          <input type="text" id="first_name" placeholder="Enter the patients first name">
+                      
+                      </div>
+                      <div class="input_box">
+                          <span class="details">Last Name</span>
+                          <input type="text" id="last_name" placeholder="Enter the patient surname">
+                      
+                      </div> 
+                      <div class="input_box">
+                          <span class="details">Age</span>
+                          <input type="text" id="age" placeholder="Enter the patients age">
+                      
+                      </div>
+                      <div class="input_box">
+                          <span class="details">Patient ID</span>
+                          <input type="text" id="patient_id" placeholder="Enter the patients ID">
+                      
+                      </div>
+                  </div>
+                  <div class="button">
+                      <input type="submit" value="Submit">
+                  </div>
+              </form>
+          </div>
+      </div>
+      <!-----page content ends----->
+    <div class="content"></div>        
+    <!-----page content ends----->
+    <script type="text/javascript" src="infoScript.js"></script>
+</body>
+</html>
